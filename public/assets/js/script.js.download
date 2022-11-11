@@ -1,0 +1,111 @@
+function callPhone(e) {
+	if (data.telefoneFixo && data.telefoneCelular) {
+		e.preventDefault();
+		Swal.fire({
+			title: 'Telefones disponÃ­veis',
+			html:
+				'Fixo: <a href="tel:+55' + data.telefoneFixo + '">' + formatPhone(data.telefoneFixo) + '</a><br><br>' +
+				'Celular: <a href="tel:+55' + data.telefoneCelular + '">' + formatPhone(data.telefoneCelular) + '</a>',
+			showCancelButton: true,
+			showConfirmButton: false,
+			cancelButtonText: 'FECHAR'
+		});
+	} else {
+		const el = document.getElementById('telefone');
+		el.setAttribute('href', 'tel:+55' + (data.telefoneCelular || data.telefoneFixo));
+	}
+}
+
+function showAddress(e) {
+	e.preventDefault();
+	Swal.fire({
+		title: 'EndereÃ§o',
+		html: data.endereco.replace('\n', '<br>'),
+		showCancelButton: true,
+		cancelButtonText: 'FECHAR',
+		confirmButtonText: 'MAPA',
+	}).then(result => {
+		if (result.isConfirmed) {
+			window.open('https://maps.google.com?q=' + data.endereco, '_blank');
+		}
+	});
+}
+
+function callPix(e) {
+	e.preventDefault();
+	Swal.fire({
+		title: 'Chave Pix',
+		html: data.chavePix,
+		showCancelButton: true,
+		cancelButtonText: 'FECHAR',
+		confirmButtonText: 'COPIAR'
+	}).then(function (result) {
+		if (result.isConfirmed)
+			navigator.clipboard.writeText(data.chavePix);
+	});
+}
+
+function formatPhone(phone) {
+	if (phone.length == 11) {
+		return phone.replace(/(\d{2})(\d{5})(\d{4})/,
+			function (regex, part1, part2, part3) {
+				return '(' + part1 + ') ' + part2 + '-' + part3;
+			});
+	} else {
+		return phone.replace(/(\d{2})(\d{4})(\d{4})/,
+			function (regex, part1, part2, part3) {
+				return '(' + part1 + ') ' + part2 + '-' + part3;
+			});
+	}
+}
+
+function vCardContent() {
+	var content = '';
+	content += 'BEGIN:VCARD';
+	content += '\nVERSION:3.0';
+	content += '\nURL;TYPE=WORK:http://atriostech.com.br/' + data.urlPublica;
+	content += '\nN:' + data.nome.replace(/:|;|=|\n|\r|\r\n/g, ' ');
+	content += '\nFN:' + data.nome.replace(/:|;|=|\n|\r|\r\n/g, ' ');
+	if (data.telefoneCelular) content += '\nTEL;TYPE=CELL:+55' + data.telefoneCelular;
+	if (data.whatsapp) content += '\nTEL;TYPE=TEXT:+55' + data.whatsapp;
+	if (data.telefoneFixo) content += '\nTEL;TYPE=WORK:+55' + data.telefoneFixo;
+	if (data.email) content += '\nEMAIL;TYPE=WORK:' + data.email.replace(/:|;|=|\n|\r|\r\n/g, ' ');
+	if (data.profissao) content += '\nTITLE:' + data.profissao.replace(/:|;|=|\n|\r|\r\n/g, ' ');
+	if (data.endereco) content += '\nADR;TYPE=WORK:' + data.endereco.replace(/:|;|=|\n|\r|\r\n/g, ' ');
+	content += '\nEND:VCARD';
+	return content;
+}
+
+function saveVCard() {
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/x-vcard;charset=utf-8,' + encodeURIComponent(vCardContent()));
+	element.setAttribute('download', 'agenda.vcf');
+
+	element.style.display = 'none';
+	document.body.appendChild(element);
+
+	element.click();
+
+	document.body.removeChild(element);
+}
+
+function qrcode() {
+	$('.qrcode-container').toggle();
+	if ($('#qrcode').html() == "") {
+
+		var qrContent = vCardContent();
+		var el = document.getElementById("qrcode");
+		var qr = QRCode.generateSVG(qrContent, {
+			ecclevel: "M",
+			fillcolor: "#FFF",
+			textcolor: "#000",
+			margin: 2,
+			modulesize: 8
+		});
+		el.appendChild(qr);
+	}
+}
+
+function share() {
+	window.open('https://api.whatsapp.com/send?phone&text=http:/atriostech.com.br/' + data.urlPublica, '_blank');
+}
